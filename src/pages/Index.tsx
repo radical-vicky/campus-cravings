@@ -1,12 +1,23 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Header } from '@/components/home/Header';
+import { MealPlanCard } from '@/components/home/MealPlanCard';
+import { PromoBanner } from '@/components/home/PromoBanner';
+import { CategoryFilter } from '@/components/home/CategoryFilter';
+import { RestaurantList } from '@/components/home/RestaurantList';
 
 const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState('1');
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background pb-20">
+      <Header />
+      <MealPlanCard />
+      <PromoBanner />
+      <CategoryFilter
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
+      <RestaurantList selectedCategory={selectedCategory} />
     </div>
   );
 };
