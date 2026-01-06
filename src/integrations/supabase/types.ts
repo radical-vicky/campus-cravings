@@ -14,7 +14,253 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      addresses: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          is_default: boolean | null
+          label: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          label: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      menu_items: {
+        Row: {
+          calories: number | null
+          category: string
+          created_at: string
+          customizations: Json | null
+          description: string | null
+          id: string
+          image: string | null
+          is_popular: boolean | null
+          is_vegan: boolean | null
+          is_vegetarian: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+        }
+        Insert: {
+          calories?: number | null
+          category: string
+          created_at?: string
+          customizations?: Json | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_popular?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name: string
+          price: number
+          restaurant_id: string
+        }
+        Update: {
+          calories?: number | null
+          category?: string
+          created_at?: string
+          customizations?: Json | null
+          description?: string | null
+          id?: string
+          image?: string | null
+          is_popular?: boolean | null
+          is_vegan?: boolean | null
+          is_vegetarian?: boolean | null
+          name?: string
+          price?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          delivery_address: string | null
+          delivery_fee: number | null
+          driver_name: string | null
+          driver_phone: string | null
+          estimated_delivery: string | null
+          id: string
+          items: Json
+          payment_method: string | null
+          restaurant_id: string
+          special_instructions: string | null
+          status: string
+          subtotal: number
+          tax: number | null
+          tip: number | null
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          estimated_delivery?: string | null
+          id?: string
+          items: Json
+          payment_method?: string | null
+          restaurant_id: string
+          special_instructions?: string | null
+          status?: string
+          subtotal: number
+          tax?: number | null
+          tip?: number | null
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: string | null
+          delivery_fee?: number | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          estimated_delivery?: string | null
+          id?: string
+          items?: Json
+          payment_method?: string | null
+          restaurant_id?: string
+          special_instructions?: string | null
+          status?: string
+          subtotal?: number
+          tax?: number | null
+          tip?: number | null
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          dietary_preferences: string[] | null
+          email: string | null
+          full_name: string | null
+          id: string
+          meal_plan_balance: number | null
+          meal_plan_type: string | null
+          phone: string | null
+          student_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          dietary_preferences?: string[] | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          meal_plan_balance?: number | null
+          meal_plan_type?: string | null
+          phone?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          dietary_preferences?: string[] | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          meal_plan_balance?: number | null
+          meal_plan_type?: string | null
+          phone?: string | null
+          student_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      restaurants: {
+        Row: {
+          created_at: string
+          cuisine: string[] | null
+          delivery_fee: number | null
+          delivery_time: string | null
+          distance: string | null
+          id: string
+          image: string | null
+          is_open: boolean | null
+          min_order: number | null
+          name: string
+          promo: string | null
+          rating: number | null
+          review_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          cuisine?: string[] | null
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          distance?: string | null
+          id?: string
+          image?: string | null
+          is_open?: boolean | null
+          min_order?: number | null
+          name: string
+          promo?: string | null
+          rating?: number | null
+          review_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          cuisine?: string[] | null
+          delivery_fee?: number | null
+          delivery_time?: string | null
+          distance?: string | null
+          id?: string
+          image?: string | null
+          is_open?: boolean | null
+          min_order?: number | null
+          name?: string
+          promo?: string | null
+          rating?: number | null
+          review_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

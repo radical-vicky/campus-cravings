@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   User,
@@ -12,10 +12,10 @@ import {
   ChevronRight,
   LogOut,
 } from 'lucide-react';
-import { currentUser } from '@/data/mockData';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
 
 const menuItems = [
-  { icon: Wallet, label: 'Meal Plan', value: `$${currentUser.mealPlanBalance.toFixed(2)}`, path: '/meal-plan' },
   { icon: MapPin, label: 'Saved Addresses', value: '2 addresses', path: '/addresses' },
   { icon: CreditCard, label: 'Payment Methods', value: '2 cards', path: '/payments' },
   { icon: Heart, label: 'Favorites', value: '5 restaurants', path: '/favorites' },
@@ -25,6 +25,44 @@ const menuItems = [
 ];
 
 export default function ProfilePage() {
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-8 pb-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="w-20 h-20 mx-auto rounded-full bg-secondary flex items-center justify-center mb-4">
+            <User className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Sign in to your account</h2>
+          <p className="text-muted-foreground mb-6">
+            Access your orders, meal plan, and saved addresses
+          </p>
+          <Link to="/auth">
+            <Button className="gradient-warm text-primary-foreground rounded-xl px-8">
+              Sign In
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const displayName = profile?.full_name || user.email?.split('@')[0] || 'Student';
+  const studentId = profile?.student_id || 'Not set';
+  const mealPlanBalance = profile?.meal_plan_balance ?? 500;
+  const mealPlanType = profile?.meal_plan_type || 'Standard Plan';
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Profile Header */}
@@ -35,13 +73,13 @@ export default function ProfilePage() {
           className="flex items-center gap-4"
         >
           <div className="w-20 h-20 rounded-full gradient-warm flex items-center justify-center text-3xl font-bold text-primary-foreground">
-            {currentUser.name.charAt(0)}
+            {displayName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{currentUser.name}</h1>
-            <p className="text-muted-foreground">{currentUser.email}</p>
+            <h1 className="text-2xl font-bold">{displayName}</h1>
+            <p className="text-muted-foreground">{user.email}</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Student ID: {currentUser.studentId}
+              Student ID: {studentId}
             </p>
           </div>
         </motion.div>
@@ -56,8 +94,8 @@ export default function ProfilePage() {
       >
         <div className="flex items-center justify-between text-primary-foreground">
           <div>
-            <p className="text-primary-foreground/80 text-sm">Meal Plan Balance</p>
-            <p className="text-3xl font-bold">${currentUser.mealPlanBalance.toFixed(2)}</p>
+            <p className="text-primary-foreground/80 text-sm">{mealPlanType}</p>
+            <p className="text-3xl font-bold">${mealPlanBalance.toFixed(2)}</p>
           </div>
           <Wallet className="w-10 h-10 text-primary-foreground/50" />
         </div>
@@ -105,6 +143,7 @@ export default function ProfilePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
+          onClick={handleSignOut}
           className="w-full mt-6 flex items-center justify-center gap-2 p-4 text-destructive font-medium"
         >
           <LogOut className="w-5 h-5" />
