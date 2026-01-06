@@ -1,0 +1,43 @@
+{
+  "name": "UniOrder - Campus Food Delivery",
+  "short_name": "UniOrder",
+  "description": "Order food from your favorite campus restaurants. Fast delivery, meal plan integration, and exclusive student discounts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ef7d52",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "View Cart",
+      "url": "/cart",
+      "description": "View your current cart"
+    },
+    {
+      "name": "My Orders",
+      "url": "/orders",
+      "description": "View your order history"
+    }
+  ]
+}

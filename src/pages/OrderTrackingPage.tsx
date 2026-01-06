@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -12,6 +12,8 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 const orderSteps = [
   { id: 'confirmed', label: 'Order Confirmed', icon: Package },
@@ -20,17 +22,118 @@ const orderSteps = [
   { id: 'delivered', label: 'Delivered', icon: CheckCircle2 },
 ];
 
-export default function OrderTrackingPage() {
-  const [currentStep, setCurrentStep] = useState(1);
+interface Order {
+  id: string;
+  status: string;
+  items: any;
+  total: number;
+  delivery_address: string | null;
+  estimated_delivery: string | null;
+  created_at: string;
+  restaurant_id: string;
+  driver_name: string | null;
+  driver_phone: string | null;
+}
 
-  // Simulate order progress
+export default function OrderTrackingPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [restaurant, setRestaurant] = useState<{ name: string; image: string | null } | null>(null);
+
   useEffect(() => {
+    if (!id || !user) return;
+
+    const fetchOrder = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setOrder(data);
+        // Set current step based on status
+        const stepIndex = orderSteps.findIndex(s => s.id === data.status);
+        setCurrentStep(stepIndex >= 0 ? stepIndex + 1 : 1);
+
+        // Fetch restaurant
+        const { data: restaurantData } = await supabase
+          .from('restaurants')
+          .select('name, image')
+          .eq('id', data.restaurant_id)
+          .maybeSingle();
+        
+        if (restaurantData) {
+          setRestaurant(restaurantData);
+        }
+      }
+    };
+
+    fetchOrder();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('order-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${id}`,
+        },
+        (payload) => {
+          const updatedOrder = payload.new as Order;
+          setOrder(updatedOrder);
+          const stepIndex = orderSteps.findIndex(s => s.id === updatedOrder.status);
+          setCurrentStep(stepIndex >= 0 ? stepIndex + 1 : 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, user]);
+
+  // Simulate order progress for demo
+  useEffect(() => {
+    if (!order || order.status === 'delivered') return;
+
     const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev < 4 ? prev + 1 : prev));
-    }, 5000);
+      setCurrentStep((prev) => {
+        if (prev < 4) {
+          // Update order status in database
+          const newStatus = orderSteps[prev]?.id;
+          if (newStatus && order) {
+            supabase
+              .from('orders')
+              .update({ status: newStatus })
+              .eq('id', order.id)
+              .then();
+          }
+          return prev + 1;
+        }
+        return prev;
+      });
+    }, 8000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [order]);
+
+  if (!order) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const orderItems = Array.isArray(order.items) ? order.items : [];
+  const itemCount = orderItems.reduce((sum: number, item: any) => sum + (item.quantity || 1), 0);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -43,8 +146,10 @@ export default function OrderTrackingPage() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold">Order #ORD-2024-001</h1>
-          <p className="text-sm text-muted-foreground">Estimated arrival: 12:45 PM</p>
+          <h1 className="text-xl font-bold">Order #{order.id.slice(0, 8)}</h1>
+          <p className="text-sm text-muted-foreground">
+            Estimated arrival: {order.estimated_delivery || '25-35 min'}
+          </p>
         </div>
       </header>
 
@@ -175,7 +280,7 @@ export default function OrderTrackingPage() {
                   🚴
                 </div>
                 <div>
-                  <p className="font-semibold">Marcus Chen</p>
+                  <p className="font-semibold">{order.driver_name || 'Marcus Chen'}</p>
                   <p className="text-sm text-muted-foreground">4.9 ⭐ • 234 deliveries</p>
                 </div>
               </div>
@@ -198,16 +303,24 @@ export default function OrderTrackingPage() {
           <h2 className="font-bold mb-4">Order Details</h2>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100"
-                  alt="Restaurant"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-12 h-12 rounded-lg overflow-hidden bg-secondary">
+                {restaurant?.image ? (
+                  <img
+                    src={restaurant.image}
+                    alt={restaurant.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ChefHat className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                )}
               </div>
               <div>
-                <p className="font-semibold">Campus Grill House</p>
-                <p className="text-sm text-muted-foreground">2 items • $31.39</p>
+                <p className="font-semibold">{restaurant?.name || 'Restaurant'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {itemCount} items • ${order.total.toFixed(2)}
+                </p>
               </div>
             </div>
             <div className="pt-3 border-t border-border">
@@ -215,7 +328,7 @@ export default function OrderTrackingPage() {
                 <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm text-muted-foreground">Delivering to</p>
-                  <p className="font-medium">Wilson Hall, Room 312</p>
+                  <p className="font-medium">{order.delivery_address || 'Address not set'}</p>
                 </div>
               </div>
             </div>
